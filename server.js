@@ -1,26 +1,20 @@
 const express = require("express");
 const app = express();
 
-// Импорт модулей
+
 const teamsRouter = require("./routes/teams");
 const tasksRouter = require("./routes/tasks");
 const errorHandler = require("./middlewares/errorHandler");
 
-// ─── Middleware ───────────────────────────────────────────────
-// Парсинг JSON-тела запроса — кладёт результат в req.body
-app.use(express.json());
 
-// Логирование запросов (удобно для отладки)
+app.use(express.json());
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
-
-// ─── Маршруты ─────────────────────────────────────────────────
 app.use("/teams", teamsRouter);
 app.use("/tasks", tasksRouter);
 
-// Корневой маршрут — информация об API
 app.get("/", (req, res) => {
   res.json({
     name: "Hackathon Platform API",
@@ -32,20 +26,16 @@ app.get("/", (req, res) => {
   });
 });
 
-// ─── 404 для неизвестных маршрутов ────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: "Маршрут не найден" });
 });
 
-// ─── Глобальный обработчик ошибок (последним!) ────────────────
 app.use(errorHandler);
-
-// ─── Запуск сервера ───────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Сервер хакатонов запущен на http://localhost:${PORT}`);
-  console.log(`📋 Доступные маршруты:`);
+  console.log(` Сервер хакатонов запущен на http://localhost:${PORT}`);
+  console.log(` Доступные маршруты:`);
   console.log(`   GET    /                       - информация об API`);
   console.log(`   ─── КОМАНДЫ ───`);
   console.log(`   GET    /teams                  - список команд`);
