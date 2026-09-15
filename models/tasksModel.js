@@ -1,4 +1,4 @@
-// Хранилище заданий в памяти
+
 let tasks = [
   {
     id: 1,
@@ -21,28 +21,23 @@ let tasks = [
 let nextId = 3;
 
 module.exports = {
-  // Получить все задания
   getAll: () => tasks,
-
-  // Получить задание по ID
+  
   getById: (id) => tasks.find((t) => t.id === id),
-
-  // Создать задание
+  
   create: (data) => {
     const task = { id: nextId++, ...data };
     tasks.push(task);
     return task;
   },
 
-  // Обновить задание (полностью или частично)
   update: (id, data) => {
     const task = tasks.find((t) => t.id === id);
     if (!task) return null;
     Object.assign(task, data);
     return task;
   },
-
-  // Удалить задание
+  
   remove: (id) => {
     const index = tasks.findIndex((t) => t.id === id);
     if (index === -1) return false;
