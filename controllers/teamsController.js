@@ -1,17 +1,14 @@
-const Team = require("../models/teamsModel");
+const { Team } = require("../models");
 
 // GET /teams
-exports.getAll = (req, res) => {
-  res.json(Team.getAll());
+exports.getAll = async (req, res) => {
+  const teams = await Team.findAll();
+  res.json(teams);
 };
 
 // GET /teams/:id
-exports.getById = (req, res) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    return res.status(400).json({ error: "ID должен быть числом" });
-  }
-  const team = Team.getById(id);
+exports.getById = async (req, res) => {
+  const team = await Team.findByPk(req.params.id);
   if (!team) {
     return res.status(404).json({ error: "Команда не найдена" });
   }
@@ -19,51 +16,34 @@ exports.getById = (req, res) => {
 };
 
 // POST /teams
-exports.create = (req, res) => {
+exports.create = async (req, res) => {
   const { name, captain, members, hackathon } = req.body;
   if (!name || !captain || members === undefined || !hackathon) {
     return res.status(400).json({
       error: "Необходимо указать: name, captain, members, hackathon",
     });
   }
-
-  const team = Team.create({ name, captain, members, hackathon });
+  const team = await Team.create({ name, captain, members, hackathon });
   res.status(201).json(team);
 };
 
 // PUT /teams/:id
-exports.update = (req, res) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    return res.status(400).json({ error: "ID должен быть числом" });
-  }
-
-  const { name, captain, members, hackathon } = req.body;
-  if (!name || !captain || members === undefined || !hackathon) {
-    return res.status(400).json({
-      error: "Необходимо указать: name, captain, members, hackathon",
-    });
-  }
-
-  const team = Team.update(id, { name, captain, members, hackathon });
+exports.update = async (req, res) => {
+  const team = await Team.findByPk(req.params.id);
   if (!team) {
     return res.status(404).json({ error: "Команда не найдена" });
   }
+  const { name, captain, members, hackathon } = req.body;
+  await team.update({ name, captain, members, hackathon });
   res.json(team);
 };
 
 // PATCH /teams/:id
-exports.patch = (req, res) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    return res.status(400).json({ error: "ID должен быть числом" });
-  }
-
-  const team = Team.getById(id);
+exports.patch = async (req, res) => {
+  const team = await Team.findByPk(req.params.id);
   if (!team) {
     return res.status(404).json({ error: "Команда не найдена" });
   }
-
   const allowed = ["name", "captain", "members", "hackathon"];
   const updates = {};
   for (const key of allowed) {
@@ -71,21 +51,16 @@ exports.patch = (req, res) => {
       updates[key] = req.body[key];
     }
   }
-
-  const updated = Team.update(id, updates);
-  res.json(updated);
+  await team.update(updates);
+  res.json(team);
 };
 
 // DELETE /teams/:id
-exports.remove = (req, res) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    return res.status(400).json({ error: "ID должен быть числом" });
-  }
-
-  const ok = Team.remove(id);
-  if (!ok) {
+exports.remove = async (req, res) => {
+  const team = await Team.findByPk(req.params.id);
+  if (!team) {
     return res.status(404).json({ error: "Команда не найдена" });
   }
+  await team.destroy();
   res.status(204).send();
 };
