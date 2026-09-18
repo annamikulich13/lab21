@@ -3,6 +3,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.bulkInsert("Teams", [
+      //несколько записей за 1 запрос
       {
         name: "CodeBreakers",
         captain: "Иван Петров",
