@@ -1,12 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const ctrl = require("../controllers/tasksController");
+const authMiddleware = require("../middlewares/auth");
+const isAdmin = require("../middlewares/isAdmin");
 
+// Публичные
 router.get("/", ctrl.getAll);
 router.get("/:id", ctrl.getById);
-router.post("/", ctrl.create);
-router.put("/:id", ctrl.update);
-router.patch("/:id", ctrl.patch);
-router.delete("/:id", ctrl.remove);
+
+// Только для админа
+router.post("/", authMiddleware, isAdmin, ctrl.create);
+router.put("/:id", authMiddleware, isAdmin, ctrl.update);
+router.patch("/:id", authMiddleware, isAdmin, ctrl.patch);
+router.delete("/:id", authMiddleware, isAdmin, ctrl.remove);
 
 module.exports = router;

@@ -1,6 +1,3 @@
-// Глобальный обработчик ошибок.
-// ВАЖНО: должен подключаться последним в server.js.
-// Сигнатура из 4 аргументов обязательна для Express.
 module.exports = (err, req, res, next) => {
   // Ошибки парсинга JSON — вина клиента, не сервера
   if (err.type === "entity.parse.failed" || err instanceof SyntaxError) {

@@ -1,37 +1,37 @@
-'use strict';
+"use strict"; //файл который создает табл тимс в бд
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Teams', {
+    await queryInterface.createTable("Teams", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       captain: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       members: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       hackathon: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Teams');
-  }
+    await queryInterface.dropTable("Teams");
+  },
 };

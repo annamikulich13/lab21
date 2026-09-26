@@ -1,12 +1,10 @@
 const { Task } = require("../models");
 
-// GET /tasks
 exports.getAll = async (req, res) => {
   const tasks = await Task.findAll();
   res.json(tasks);
 };
 
-// GET /tasks/:id
 exports.getById = async (req, res) => {
   const task = await Task.findByPk(req.params.id);
   if (!task) {
@@ -15,7 +13,6 @@ exports.getById = async (req, res) => {
   res.json(task);
 };
 
-// POST /tasks
 exports.create = async (req, res) => {
   const { title, description, difficulty, points, hackathon } = req.body;
   if (
@@ -31,6 +28,7 @@ exports.create = async (req, res) => {
     });
   }
   const task = await Task.create({
+    //вставляет запись в табл
     title,
     description,
     difficulty,
@@ -40,7 +38,6 @@ exports.create = async (req, res) => {
   res.status(201).json(task);
 };
 
-// PUT /tasks/:id
 exports.update = async (req, res) => {
   const task = await Task.findByPk(req.params.id);
   if (!task) {
@@ -51,7 +48,6 @@ exports.update = async (req, res) => {
   res.json(task);
 };
 
-// PATCH /tasks/:id
 exports.patch = async (req, res) => {
   const task = await Task.findByPk(req.params.id);
   if (!task) {
@@ -60,8 +56,10 @@ exports.patch = async (req, res) => {
   const allowed = ["title", "description", "difficulty", "points", "hackathon"];
   const updates = {};
   for (const key of allowed) {
+    // цикл по элементам массива
     if (req.body[key] !== undefined) {
-      updates[key] = req.body[key];
+      //передан ли этот ключ в req.body.
+      updates[key] = req.body[key]; //если передан, копируем в updates
     }
   }
   await task.update(updates);
@@ -74,6 +72,6 @@ exports.remove = async (req, res) => {
   if (!task) {
     return res.status(404).json({ error: "Задание не найдено" });
   }
-  await task.destroy();
+  await task.destroy(); // ждем ответа от постгрес
   res.status(204).send();
 };
