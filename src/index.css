@@ -1,0 +1,46 @@
+/* src/index.css */
+
+:root {
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+  color-scheme: dark;
+
+  --bg: #0f1115;
+  --bg-elev: #161a21;
+  --bg-elev-2: #1c2129;
+  --border: #262c36;
+  --border-strong: #333b47;
+  --text: #e5e7eb;
+  --text-dim: #9ca3af;
+  --text-muted: #6b7280;
+
+  --accent: #4f8cff;
+  --accent-hover: #3b7aeb;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+#root {
+  min-height: 100vh;
+}
