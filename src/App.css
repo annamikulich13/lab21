@@ -365,3 +365,110 @@
   border: 1px dashed var(--border-strong);
   border-radius: 10px;
 }
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+  font-size: 16px;
+}
+
+.error-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #f87171;
+}
+
+.error-state p {
+  margin: 0 0 16px;
+  font-size: 15px;
+}
+.login-form {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 30px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.login-form h2 {
+  margin: 0 0 20px;
+  color: var(--text);
+  text-align: center;
+}
+
+.login-form .item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.error-message {
+  color: #f87171;
+  font-size: 14px;
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  margin: 0 0 6px;
+}
+.header .subtitle {
+  margin: 0;
+}
+.guest-hint {
+  text-align: center;
+  padding: 20px;
+  background: rgba(79, 140, 255, 0.08);
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.guest-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.guest-divider::before,
+.guest-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.full-width {
+  width: 100%;
+}
+/* Кнопка "Создать аккаунт" под формой логина */
+.login-form + .btn-secondary {
+  max-width: 400px;
+  margin: 10px auto 0;
+  display: block;
+}
+
+/* Кнопка "Уже есть аккаунт? Войти" под формой регистрации */
+.full-width {
+  width: 100%;
+}

@@ -1,34 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-
-const initialTeams = [
-  {
-    id: 1,
-    name: "CodeBreakers",
-    captain: "Иван Петров",
-    members: 4,
-    hackathon: "AI Challenge 2026",
-  },
-  {
-    id: 2,
-    name: "WebWizards",
-    captain: "Мария Смирнова",
-    members: 5,
-    hackathon: "WebDev Cup",
-  },
-  {
-    id: 3,
-    name: "MobileMasters",
-    captain: "Алексей Сидоров",
-    members: 3,
-    hackathon: "Mobile Cup 2026",
-  },
-];
+import { fetchTeams, createTeam, updateTeam, deleteTeam } from "../api";
 
 const HACKATHONS = ["AI Challenge 2026", "WebDev Cup", "Mobile Cup 2026"];
 
-export default function TeamList() {
-  const [teams, setTeams] = useLocalStorage("teams", initialTeams);
+export default function TeamList({ isAuthenticated }) {
+  // ← добавлен пропс
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -38,40 +17,86 @@ export default function TeamList() {
   });
 
   const [filterHackathon, setFilterHackathon] = useState("all");
-
   const [editingId, setEditingId] = useState(null);
   const [editDraft, setEditDraft] = useState(null);
 
-  // ============ ДОП. ПОБОЧНЫЙ ЭФФЕКТ: заголовок страницы ============
+  // === Загрузка команд с сервера ===
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setLoading(true);
+    setError(null);
+
+    fetchTeams({ signal: controller.signal })
+      .then((res) => setTeams(res.data))
+      .catch((err) => {
+        if (err.name !== "CanceledError" && err.name !== "AbortError") {
+          setError(err.message || "Ошибка загрузки");
+        }
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, []);
+
   useEffect(() => {
     document.title = `Команды (${teams.length})`;
   }, [teams.length]);
 
-  // ============ CRUD ============
-
-  const handleAdd = (e) => {
+  // === CRUD ===
+  const handleAdd = async (e) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      alert("Войдите, чтобы добавлять команды");
+      return;
+    }
     if (!form.name.trim() || !form.captain.trim()) return;
 
-    setTeams((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: form.name.trim(),
-        captain: form.captain.trim(),
-        members: Number(form.members) || 0,
-        hackathon: form.hackathon,
-      },
-    ]);
+    const tempTeam = {
+      id: Date.now(),
+      name: form.name.trim(),
+      captain: form.captain.trim(),
+      members: Number(form.members) || 0,
+      hackathon: form.hackathon,
+    };
 
+    setTeams((prev) => [...prev, tempTeam]);
     setForm({ name: "", captain: "", members: "", hackathon: HACKATHONS[0] });
+
+    try {
+      const res = await createTeam(tempTeam);
+      setTeams((prev) =>
+        prev.map((t) => (t.id === tempTeam.id ? res.data : t)),
+      );
+    } catch (err) {
+      setTeams((prev) => prev.filter((t) => t.id !== tempTeam.id));
+      alert("Ошибка добавления: " + (err.response?.data?.error || err.message));
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
+    if (!isAuthenticated) {
+      alert("Войдите, чтобы удалять команды");
+      return;
+    }
+    const deleted = teams.find((t) => t.id === id);
+    if (!deleted) return;
+
     setTeams((prev) => prev.filter((t) => t.id !== id));
+
+    try {
+      await deleteTeam(id);
+    } catch (err) {
+      setTeams((prev) => [...prev, deleted]);
+      alert("Ошибка удаления: " + (err.response?.data?.error || err.message));
+    }
   };
 
   const startEdit = (team) => {
+    if (!isAuthenticated) {
+      alert("Войдите, чтобы редактировать команды");
+      return;
+    }
     setEditingId(team.id);
     setEditDraft({ ...team });
   };
@@ -81,33 +106,36 @@ export default function TeamList() {
     setEditDraft(null);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editDraft || !editDraft.name.trim()) return;
 
-    setTeams((prev) =>
-      prev.map((t) =>
-        t.id === editingId
-          ? {
-              ...editDraft,
-              name: editDraft.name.trim(),
-              captain: editDraft.captain.trim(),
-              members: Number(editDraft.members) || 0,
-            }
-          : t,
-      ),
-    );
+    const oldTeams = [...teams];
+    const updated = {
+      ...editDraft,
+      name: editDraft.name.trim(),
+      captain: editDraft.captain.trim(),
+      members: Number(editDraft.members) || 0,
+    };
+
+    setTeams((prev) => prev.map((t) => (t.id === editingId ? updated : t)));
     cancelEdit();
+
+    try {
+      const res = await updateTeam(editingId, updated);
+      setTeams((prev) => prev.map((t) => (t.id === editingId ? res.data : t)));
+    } catch (err) {
+      setTeams(oldTeams);
+      alert("Ошибка сохранения: " + (err.response?.data?.error || err.message));
+    }
   };
 
-  // ============ Фильтрация ============
-
+  // === Фильтр ===
   const visible = useMemo(() => {
     if (filterHackathon === "all") return teams;
     return teams.filter((t) => t.hackathon === filterHackathon);
   }, [teams, filterHackathon]);
 
-  // ============ Статистика ============
-
+  // === Статистика ===
   const stats = useMemo(() => {
     const total = teams.length;
     const totalMembers = teams.reduce(
@@ -117,41 +145,62 @@ export default function TeamList() {
     return { total, totalMembers };
   }, [teams]);
 
-  // ============ Рендер ============
+  if (loading) return <p className="loading">Загрузка команд…</p>;
+
+  if (error) {
+    return (
+      <div className="error-state">
+        <p>Ошибка: {error}</p>
+        <button
+          className="btn btn-primary"
+          onClick={() => window.location.reload()}
+        >
+          Повторить
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="team-list">
-      <form className="item-form" onSubmit={handleAdd}>
-        <input
-          placeholder="Название команды"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
-        <input
-          placeholder="Капитан"
-          value={form.captain}
-          onChange={(e) => setForm({ ...form, captain: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Участников"
-          value={form.members}
-          onChange={(e) => setForm({ ...form, members: e.target.value })}
-        />
-        <select
-          value={form.hackathon}
-          onChange={(e) => setForm({ ...form, hackathon: e.target.value })}
-        >
-          {HACKATHONS.map((h) => (
-            <option key={h} value={h}>
-              {h}
-            </option>
-          ))}
-        </select>
-        <button type="submit" className="btn btn-primary">
-          Добавить
-        </button>
-      </form>
+      {/* Форма только для админа */}
+      {isAuthenticated ? (
+        <form className="item-form" onSubmit={handleAdd}>
+          <input
+            placeholder="Название команды"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          <input
+            placeholder="Капитан"
+            value={form.captain}
+            onChange={(e) => setForm({ ...form, captain: e.target.value })}
+          />
+          <input
+            type="number"
+            placeholder="Участников"
+            value={form.members}
+            onChange={(e) => setForm({ ...form, members: e.target.value })}
+          />
+          <select
+            value={form.hackathon}
+            onChange={(e) => setForm({ ...form, hackathon: e.target.value })}
+          >
+            {HACKATHONS.map((h) => (
+              <option key={h} value={h}>
+                {h}
+              </option>
+            ))}
+          </select>
+          <button type="submit" className="btn btn-primary">
+            Добавить
+          </button>
+        </form>
+      ) : (
+        <p className="guest-hint">
+          Войдите, чтобы добавлять, изменять и удалять команды.
+        </p>
+      )}
 
       <div className="filters">
         <button
@@ -194,14 +243,12 @@ export default function TeamList() {
                   onChange={(e) =>
                     setEditDraft({ ...editDraft, name: e.target.value })
                   }
-                  placeholder="Название команды"
                 />
                 <input
                   value={editDraft.captain}
                   onChange={(e) =>
                     setEditDraft({ ...editDraft, captain: e.target.value })
                   }
-                  placeholder="Капитан"
                 />
                 <input
                   type="number"
@@ -209,7 +256,6 @@ export default function TeamList() {
                   onChange={(e) =>
                     setEditDraft({ ...editDraft, members: e.target.value })
                   }
-                  placeholder="Участников"
                 />
                 <select
                   value={editDraft.hackathon}
@@ -250,20 +296,23 @@ export default function TeamList() {
                   <span>{team.hackathon}</span>
                 </div>
               </div>
-              <div className="actions">
-                <button
-                  className="btn btn-warning btn-sm"
-                  onClick={() => startEdit(team)}
-                >
-                  Изменить
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleDelete(team.id)}
-                >
-                  Удалить
-                </button>
-              </div>
+              {/* Кнопки только для админа */}
+              {isAuthenticated && (
+                <div className="actions">
+                  <button
+                    className="btn btn-warning btn-sm"
+                    onClick={() => startEdit(team)}
+                  >
+                    Изменить
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(team.id)}
+                  >
+                    Удалить
+                  </button>
+                </div>
+              )}
             </li>
           ),
         )}
